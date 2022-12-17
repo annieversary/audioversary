@@ -12,6 +12,9 @@ const PEAK_METER_DECAY_MS: f64 = 150.0;
 pub struct Gain {
     params: Arc<GainParams>,
 
+    last: [f32; 2],
+    counter: [u16; 2],
+
     /// Needed to normalize the peak meter's response based on the sample rate.
     peak_meter_decay_weight: f32,
     /// The current data for the peak meter. This is stored as an [`Arc`] so we can share it between
@@ -29,14 +32,19 @@ struct GainParams {
     #[persist = "editor-state"]
     editor_state: Arc<ViziaState>,
 
-    #[id = "gain"]
-    pub gain: FloatParam,
+    #[id = "rate"]
+    pub rate: FloatParam,
+    #[id = "mix"]
+    pub mix: FloatParam,
 }
 
 impl Default for Gain {
     fn default() -> Self {
         Self {
             params: Arc::new(GainParams::default()),
+
+            last: [0.0; 2],
+            counter: [0, 0],
 
             peak_meter_decay_weight: 1.0,
             peak_meter: Arc::new(AtomicF32::new(util::MINUS_INFINITY_DB)),
@@ -49,28 +57,24 @@ impl Default for GainParams {
         Self {
             editor_state: editor::default_state(),
 
-            gain: FloatParam::new(
-                "Gain",
-                util::db_to_gain(0.0),
-                FloatRange::Skewed {
-                    min: util::db_to_gain(-30.0),
-                    max: util::db_to_gain(30.0),
-                    factor: FloatRange::gain_skew_factor(-30.0, 30.0),
-                },
-            )
-            .with_smoother(SmoothingStyle::Logarithmic(50.0))
-            .with_unit(" dB")
-            .with_value_to_string(formatters::v2s_f32_gain_to_db(2))
-            .with_string_to_value(formatters::s2v_f32_gain_to_db()),
+            rate: FloatParam::new("Rate", 0.0, FloatRange::Linear { min: 0.0, max: 1.0 })
+                .with_smoother(SmoothingStyle::Logarithmic(50.0))
+                .with_unit("%")
+                .with_value_to_string(formatters::v2s_f32_percentage(2))
+                .with_string_to_value(formatters::s2v_f32_percentage()),
+            mix: FloatParam::new("Mix", 1.0, FloatRange::Linear { min: 0.0, max: 1.0 })
+                .with_unit("%")
+                .with_value_to_string(formatters::v2s_f32_percentage(2))
+                .with_string_to_value(formatters::s2v_f32_percentage()),
         }
     }
 }
 
 impl Plugin for Gain {
-    const NAME: &'static str = "Gain GUI (VIZIA)";
-    const VENDOR: &'static str = "Moist Plugins GmbH";
-    const URL: &'static str = "https://youtu.be/dQw4w9WgXcQ";
-    const EMAIL: &'static str = "info@example.com";
+    const NAME: &'static str = "downsampler";
+    const VENDOR: &'static str = "audioversary";
+    const URL: &'static str = "https://audio.versary.town";
+    const EMAIL: &'static str = "annie@versary.town";
 
     const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -119,13 +123,21 @@ impl Plugin for Gain {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        for channel_samples in buffer.iter_samples() {
+        for mut channel_samples in buffer.iter_samples() {
             let mut amplitude = 0.0;
             let num_samples = channel_samples.len();
 
-            let gain = self.params.gain.smoothed.next();
-            for sample in channel_samples {
-                *sample *= gain;
+            let repeats = self.params.rate.smoothed.next() * 200.0;
+            let mix = self.params.mix.smoothed.next();
+            for (id, sample) in channel_samples.iter_mut().enumerate() {
+                if (self.counter[id] as f32) < repeats {
+                    *sample = mix * self.last[id] + (1.0 - mix) * *sample;
+                    self.counter[id] += 1;
+                } else {
+                    self.counter[id] = 0;
+                    self.last[id] = *sample;
+                }
+
                 amplitude += *sample;
             }
 
@@ -164,8 +176,8 @@ impl Plugin for Gain {
 // }
 
 impl Vst3Plugin for Gain {
-    const VST3_CLASS_ID: [u8; 16] = *b"GainGuiVIIIZIAAA";
-    const VST3_CATEGORIES: &'static str = "Fx|Dynamics";
+    const VST3_CLASS_ID: [u8; 16] = *b"VERSARYdownsampl";
+    const VST3_CATEGORIES: &'static str = "Fx|Modulation";
 }
 
 // nih_export_clap!(Gain);
