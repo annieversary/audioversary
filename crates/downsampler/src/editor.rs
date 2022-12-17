@@ -31,6 +31,8 @@ pub(crate) fn create(
         assets::register_noto_sans_light(cx);
         assets::register_noto_sans_thin(cx);
 
+        cx.add_theme(include_str!("editor.css"));
+
         Data {
             params: params.clone(),
             peak_meter: peak_meter.clone(),
@@ -50,10 +52,10 @@ pub(crate) fn create(
             // NOTE: VIZIA adds 1 pixel of additional height to these labels, so we'll need to
             //       compensate for that
             Label::new(cx, "Rate").bottom(Pixels(-1.0));
-            ParamSlider::new(cx, Data::params, |params| &params.rate);
+            ParamSlider::new(cx, Data::params, |params| &params.rate).class("slider");
 
             Label::new(cx, "Mix").bottom(Pixels(-1.0));
-            ParamSlider::new(cx, Data::params, |params| &params.mix);
+            ParamSlider::new(cx, Data::params, |params| &params.mix).class("slider");
 
             PeakMeter::new(
                 cx,
