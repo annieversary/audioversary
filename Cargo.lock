@@ -601,6 +601,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "dasp_frame"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2a3937f5fe2135702897535c8d4a5553f8b116f76c1529088797f2eee7c5cd6"
+dependencies = [
+ "dasp_sample",
+]
+
+[[package]]
+name = "dasp_sample"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c87e182de0887fd5361989c677c4e8f5000cd9491d6d563161a8f3a5519fc7f"
+
+[[package]]
 name = "discard"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -645,6 +660,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bde03329ae10e79ede66c9ce4dc930aa8599043b0743008548680f25b91502d6"
 dependencies = [
  "dtoa",
+]
+
+[[package]]
+name = "ebur128"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c2e80996601d007c5758ddc23ebb9feacf05885e34deda08d1a245b481f21ea"
+dependencies = [
+ "bitflags",
+ "dasp_frame",
+ "dasp_sample",
+ "smallvec",
 ]
 
 [[package]]
@@ -1188,6 +1215,15 @@ dependencies = [
  "log",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.42.0",
+]
+
+[[package]]
+name = "morpheus"
+version = "0.1.0"
+dependencies = [
+ "atomic_float",
+ "nih_plug",
+ "nih_plug_vizia",
 ]
 
 [[package]]
@@ -2292,6 +2328,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fdbf052a0783de01e944a6ce7a8cb939e295b1e7be835a1112c3b9a7f047a5a"
 
 [[package]]
+name = "utils"
+version = "0.1.0"
+
+[[package]]
 name = "uuid"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2454,6 +2494,16 @@ version = "0.1.0"
 source = "git+https://github.com/robbert-vdh/vst3-sys.git?branch=fix/drop-box-from-raw#b3ff4d775940f5b476b9d1cca02a90e07e1922a2"
 dependencies = [
  "vst3-com",
+]
+
+[[package]]
+name = "vstmommy"
+version = "0.1.0"
+dependencies = [
+ "atomic_float",
+ "ebur128",
+ "nih_plug",
+ "nih_plug_vizia",
 ]
 
 [[package]]
